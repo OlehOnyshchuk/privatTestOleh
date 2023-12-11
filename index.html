@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="manifest" href="site.webmanifest">
+    <meta name="theme-color" content="#fafafa">
+  <title>Blog Post Management</title>
+</head>
+<body>
+
+<h1>Blog Post Management</h1>
+
+<!-- Documentation Section -->
+<section>
+  <h2>API Documentation</h2>
+
+  <p>This simple web page interacts with the JSONPlaceholder API to manage blog posts. The available operations are:</p>
+
+  <ul>
+    <li><strong>Create New Post:</strong> <code>POST /posts</code></li>
+    <li><strong>Update Post:</strong> <code>PUT /posts/:postId</code></li>
+    <li><strong>Get Post:</strong> <code>GET /posts/:postId</code></li>
+    <li><strong>Remove Post:</strong> <code>DELETE /posts/:postId</code></li>
+  </ul>
+</section>
+
+<button onclick="createPost()">Create New Post</button>
+<button onclick="updatePost()">Update Post</button>
+<button onclick="getPost()">Get Post</button>
+<button onclick="removePost()">Remove Post</button>
+<div id="result"></div>
+
+<script>
+  let url = 'https://jsonplaceholder.typicode.com/posts/'
+
+  /**
+   * Create a new post.
+   * @function
+   * @name createPost
+   * @returns {Object}
+   */
+  function createPost() {
+    const post = {
+      title: 'Новий пост',
+      body: 'Текст нового поста від Олега',
+      userId: 1
+    };
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(post),
+    })
+      .then(response => response.json())
+      .then(data => {
+        displayResult('New post created:', data);
+      })
+      .catch(error => {
+        displayResult('Error creating post:', error, true);
+      });
+  }
+
+  /**
+   * Update information about a specific post.
+   * @function
+   * @name updatePost
+   * @returns {Object}
+   */
+  function updatePost() {
+    const postId = 1;
+    const updatedPost = {
+      title: 'Новий заголовок поста від Олега'
+    };
+
+    fetch(url + `${postId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updatedPost),
+    })
+      .then(response => response.json())
+      .then(data => {
+        displayResult('Post updated:', data);
+      })
+      .catch(error => {
+        displayResult('Error updating post:', error, true);
+      });
+  }
+
+  /**
+   * Get information about a specific post.
+   * @function
+   * @name getPost
+   * @returns {Object}
+   */
+  function getPost() {
+    const postId = 1;
+
+    fetch(url + `${postId}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        displayResult('Post information:', data);
+      })
+      .catch(error => {
+        displayResult('Error getting post information:', error, true);
+      });
+  }
+
+  /**
+   * Remove a post.
+   * @function
+   * @name removePost
+   * @returns {string}
+   */
+  function removePost() {
+    const postId = 1;
+
+    fetch(url + `${postId}`, {
+      method: 'DELETE',
+    })
+      .then(response => {
+        if (response.ok) {
+          displayResult('Post with id: "' + postId + '" removed successfully.');
+        } else {
+          displayResult('Error removing post:', response.status, true);
+        }
+      })
+      .catch(error => {
+        displayResult('Error removing post:', error, true);
+      });
+  }
+
+  function displayResult(message, data, isError = false) {
+    const resultElement = document.getElementById('result');
+    resultElement.innerHTML = `<p>${message}</p>`;
+
+    if (data !== undefined) {
+      if (isError) {
+        resultElement.innerHTML += `<p style="color: red;">${data}</p>`;
+      } else {
+        resultElement.innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+      }
+    }
+  }
+</script>
+</body>
+</html>
