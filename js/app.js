@@ -1,91 +1,6 @@
   let URL = 'https://jsonplaceholder.typicode.com/posts/';
   let selectRow = null;
 
-  /**
-  * Update information about a specific post.
-  * @function
-  * @name updatePost
-  * @returns {Object}
-  */
-  function updatePost(postId, title) {
-  const updatedPost = {
-  title: title
-};
-
-  fetch(URL + `${postId}`, {
-  method: 'PUT',
-  headers: {
-  'Content-Type': 'application/json',
-},
-  body: JSON.stringify(updatedPost),
-})
-  .then(response => response.json())
-  .then(data => {
-  displayResult('Post updated:', data);
-})
-  .catch(error => {
-  displayResult('Error updating post:', error, true);
-});
-}
-
-  // Trigger the modal when clicking the "Edit" button
-  document.querySelector("#table-list").addEventListener("click", (e) => {
-    let target = e.target;
-    if (target.classList.contains("edit")) {
-      selectRow = target.parentElement.parentElement;
-      const editTitleInput = document.querySelector("#editTitle");
-      editTitleInput.value = selectRow.children[0].textContent; // Assuming the Title is in the 1st column
-      $("#editModal").modal("show");
-
-    }
-  });
-
-  // Save the edited title when clicking the "Save changes" button
-  document.querySelector("#saveEditTitle").addEventListener("click", () => {
-    const userId = selectRow.children[2].textContent; // Assuming the User Id is in the third column
-    const title = document.querySelector("#editTitle").value;
-
-    // Call the updatePost method
-    updatePost(userId, title);
-
-    // Update the UI with the edited title
-    selectRow.children[0].textContent = title;
-    $("#editModal").modal("hide"); // Hide the modal
-    showAlert("Title Edited", "success");
-  });
-
-
-  /**
-  * Get information about a specific post.
-  * @function
-  * @name getPost
-  * @returns {Object}
-  */
-  function getPost(userId) {
-    fetch(URL + `${userId}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        showAlert('Post information: ', "succses", data);
-      })
-      .catch(error => {
-        showAlert('Error getting post information:', "danger", error);
-      });
-  }
-
-  document.querySelector("#table-list").addEventListener("click", (e) => {
-    const target = e.target;
-    if (target.classList.contains("get")) {
-      const userId = selectRow.children[2].textContent;
-      getPost(userId);
-      showAlert("Data Fetched", "success");
-    }
-  });
-
 
   /**
    * Create a new post.
@@ -137,6 +52,101 @@
         .catch(error => {
           // Handle error if needed
           showAlert("Error", "danger", error);
+        });
+    }
+  });
+
+  /**
+  * Update information about a specific post.
+  * @function
+  * @name updatePost
+  * @returns {Object}
+  */
+  // Trigger the modal when clicking the "Edit" button
+  document.querySelector("#table-list").addEventListener("click", (e) => {
+    let target = e.target;
+    if (target.classList.contains("edit")) {
+      selectRow = target.parentElement.parentElement;
+      const editTitleInput = document.querySelector("#editTitle");
+      editTitleInput.value = selectRow.children[0].textContent; // Assuming the Title is in the 1st column
+      $("#editModal").modal("show");
+
+    }
+  });
+
+  // Save the edited title when clicking the "Save changes" button
+  document.querySelector("#saveEditTitle").addEventListener("click", async () => {
+    try {
+      const userId = selectRow.children[2].textContent; // Assuming the User Id is in the third column
+      const title = document.querySelector("#editTitle").value;
+
+      const put = {
+        title: title
+      };
+
+      const response = await fetch(URL + `${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(put),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const updatedData = await response.json();
+
+      // Update the UI with the edited title
+      selectRow.children[0].textContent = updatedData.title;
+      $("#editModal").modal("hide"); // Hide the modal
+      showAlert("Title Edited", "success");
+    } catch (error) {
+      // Handle error if needed
+      showAlert("Error", "danger", error);
+    }
+  });
+
+
+  /**
+  * Get information about a specific post.
+  * @function
+  * @name getPost
+  * @returns {Object}
+  */
+  document.querySelector("#table-list").addEventListener("click", (e) => {
+    const target = e.target;
+    if (target.classList.contains("get")) {
+      const userId = target.closest("tr").children[2].textContent;
+      fetch(URL + `${userId}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Create or update the row in the table
+          const list = document.querySelector("#table-list");
+          const row = document.createElement("tr");
+          row.innerHTML = `
+          <td>${data.title}</td>
+          <td>${data.body}</td>
+          <td>${data.userId}</td>
+          <td>${data.id}</td>
+          <td>
+            <a href="#" class="btn btn-success btn-sm get">Get</a>
+            <a href="#" class="btn btn-warning btn-sm edit">Edit</a>
+            <a href="#" class="btn btn-danger btn-sm delete">Delete</a>
+          </td>
+        `;
+          list.appendChild(row);
+          selectRow = null;
+          showAlert("Data Fetched", "success");
+        })
+        .catch(error => {
+          showAlert('Error getting post information:', 'danger', error);
         });
     }
   });
